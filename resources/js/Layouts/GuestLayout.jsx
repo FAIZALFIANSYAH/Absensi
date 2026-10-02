@@ -57,7 +57,7 @@ export default function GuestLayout({ children }) {
                     </div>
                 </div>
 
-                <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-white px-6 py-6 text-slate-900 shadow-2xl shadow-cyan-950/20 sm:px-8 [color-scheme:light]">
+                <div className="guest-form-card w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-white px-6 py-6 text-slate-900 shadow-2xl shadow-cyan-950/20 sm:px-8 [color-scheme:light]">
                     {children}
                 </div>
             </div>

@@ -95,3 +95,26 @@
     @apply font-sans;
   }
 }
+
+/* Force dark text on guest auth form inputs (white card on dark page) */
+.guest-form-card,
+.guest-form-card input,
+.guest-form-card textarea,
+.guest-form-card select {
+  color: #111827 !important; /* gray-900 */
+}
+
+.guest-form-card input::placeholder,
+.guest-form-card textarea::placeholder {
+  color: #9ca3af !important; /* gray-400 */
+}
+
+/* Chrome/Safari autofill keeps text readable */
+.guest-form-card input:-webkit-autofill,
+.guest-form-card input:-webkit-autofill:hover,
+.guest-form-card input:-webkit-autofill:focus,
+.guest-form-card textarea:-webkit-autofill,
+.guest-form-card select:-webkit-autofill {
+  -webkit-text-fill-color: #111827 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
