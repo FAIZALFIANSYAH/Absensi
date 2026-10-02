@@ -1,0 +1,247 @@
+PROJECT PHASES
+Absensi QR & Smart Class
+
+Tujuan:
+- Menjadi panduan langkah kerja dari awal sampai akhir project.
+- Menjaga eksekusi tetap sejalan dengan BRD.
+- Membantu implementasi bertahap per phase, bukan sekaligus.
+
+==================================================
+PHASE 0
+PENYELARASAN FONDASI PROJECT
+==================================================
+
+Fokus:
+- Finalisasi BRD menjadi acuan kerja teknis.
+- Tetapkan role utama: superadmin, teacher, student.
+- Tetapkan status penting: pending, approved, rejected.
+- Kunci arsitektur backend, frontend, dan database blueprint.
+- Rapikan environment project: database, mailer, storage, build frontend.
+
+Output:
+- dokumen arsitektur
+- blueprint database
+- roadmap migration
+- project bisa jalan lokal tanpa error build
+
+==================================================
+PHASE 1
+FONDASI AUTENTIKASI DAN APPROVAL AKUN
+==================================================
+
+Fokus:
+- Ubah flow auth default menjadi sesuai BRD.
+- Pisahkan registrasi siswa dan guru.
+- Tambahkan field role dan approval_status pada users.
+- Buat middleware agar user pending tidak bisa masuk dashboard utama.
+- Buat area superadmin untuk approve atau reject pendaftar.
+- Simpan histori approval bila diperlukan.
+
+Output:
+- user bisa daftar sesuai jenis akun
+- akun baru masuk status pending
+- superadmin bisa approve/reject
+- hanya akun approved yang bisa mengakses fitur utama
+
+==================================================
+PHASE 2
+FONDASI PROFIL DAN IDENTITAS USER
+==================================================
+
+Fokus:
+- Buat student_profiles dan teacher_profiles.
+- Tambahkan data identitas penting seperti NIS/NIK atau NIP/NIK.
+- Tentukan payload QR siswa.
+- Siapkan proses generate QR setelah akun siswa disetujui.
+- Tampilkan QR pribadi di dashboard atau menu siswa.
+
+Output:
+- data identitas role tersimpan rapi
+- siswa punya QR unik setelah aktif
+
+==================================================
+PHASE 3
+FONDASI KELAS DAN MEMBERSHIP
+==================================================
+
+Fokus:
+- Buat master school_classes.
+- Buat relasi class_members.
+- Tetapkan wali kelas atau guru pengampu bila dibutuhkan.
+- Buat manajemen kelas oleh superadmin.
+- Buat relasi siswa ke kelas dan guru ke kelas.
+
+Output:
+- kelas bisa dibuat
+- siswa dan guru bisa ditempatkan ke kelas tertentu
+- akses konten nanti bisa dibatasi per kelas
+
+==================================================
+PHASE 4
+DASHBOARD DAN NAVIGASI PER ROLE
+==================================================
+
+Fokus:
+- Pecah dashboard menjadi Admin, Teacher, Student.
+- Buat layout Inertia per role.
+- Tampilkan menu sesuai hak akses.
+- Share auth data, role, dan approval state ke frontend.
+
+Output:
+- pengalaman pengguna sudah sesuai peran
+- struktur UI project mulai stabil
+
+==================================================
+PHASE 5
+DOMAIN ABSENSI QR INTI
+==================================================
+
+Fokus:
+- Buat attendance_sessions.
+- Buat attendance_records.
+- Buat halaman scan absensi untuk guru dan superadmin.
+- Saat QR discan, sistem cek validitas siswa, status akun, kelas, dan sesi aktif.
+- Simpan waktu scan, siapa yang scan, dan status kehadiran.
+
+Output:
+- proses absensi QR end-to-end berjalan
+- scan menghasilkan record kehadiran otomatis
+
+==================================================
+PHASE 6
+MONITORING KEHADIRAN REAL-TIME
+==================================================
+
+Fokus:
+- Dashboard guru menampilkan siswa yang sudah scan dan belum scan.
+- Tampilkan daftar hadir per sesi dan per kelas.
+- Tambahkan filter tanggal, kelas, dan status.
+- Bila perlu, pakai polling ringan dulu sebelum realtime penuh.
+
+Output:
+- FR-03 dari BRD terpenuhi
+- guru dan admin bisa memonitor kehadiran secara operasional
+
+==================================================
+PHASE 7
+CLASSROOM / LMS LITE: MATERI
+==================================================
+
+Fokus:
+- Buat materials.
+- Guru bisa upload materi per kelas.
+- Siswa hanya bisa melihat materi dari kelasnya.
+- Tampilkan daftar materi dengan file download.
+
+Output:
+- distribusi materi per kelas berjalan
+
+==================================================
+PHASE 8
+CLASSROOM / LMS LITE: TUGAS DAN SUBMISSION
+==================================================
+
+Fokus:
+- Buat assignments.
+- Guru bisa membuat tugas dan deadline.
+- Buat submissions.
+- Siswa bisa upload tugas sebelum deadline.
+- Tampilkan status pengumpulan tugas.
+
+Output:
+- siklus tugas dari guru ke siswa berjalan lengkap
+
+==================================================
+PHASE 9
+OTORISASI, POLICY, DAN KEAMANAN
+==================================================
+
+Fokus:
+- Terapkan Policies untuk semua domain utama.
+- Pastikan route dilindungi auth, role, dan approved.
+- Validasi semua upload file.
+- Amankan payload QR dan data sensitif.
+- Cek edge case seperti double scan, user pending, siswa di luar kelas.
+
+Output:
+- sistem lebih aman dan sesuai non-functional requirement BRD
+
+==================================================
+PHASE 10
+NOTIFIKASI DAN PROSES PENDUKUNG
+==================================================
+
+Fokus:
+- Pastikan reset password via email berjalan.
+- Tambahkan notifikasi approval akun.
+- Tambahkan notifikasi deadline tugas bila memang dibutuhkan.
+- Rapikan queue dan mail configuration.
+- Siapkan pondasi admin user management untuk trigger reset link via email.
+
+Output:
+- FR-04 terpenuhi dengan baik
+- flow operasional lebih siap dipakai
+
+Catatan implementasi lanjutan:
+- User management superadmin dapat mencakup:
+  - user list
+  - search & filter
+  - create user
+  - edit user
+  - delete user
+  - approve / reject
+  - activate / deactivate
+  - reset password via email link
+- Untuk tahap awal, reset password cukup menggunakan email link dan diuji manual via Mailtrap.
+
+==================================================
+PHASE 11
+LAPORAN, PENGUJIAN, DAN STABILISASI
+==================================================
+
+Fokus:
+- Tambahkan laporan kehadiran per kelas/per tanggal.
+- Tambahkan pengujian untuk auth, approval, class membership, attendance, assignment.
+- Uji performa dasar saat scan bersamaan.
+- Uji mobile responsiveness untuk siswa dan halaman scan.
+
+Output:
+- sistem siap diuji pengguna dan lebih aman untuk dipakai
+
+==================================================
+PHASE 12
+FINALISASI DAN GO-LIVE INTERNAL
+==================================================
+
+Fokus:
+- Seed superadmin dan data awal.
+- Rapikan README/project docs.
+- Buat checklist deployment.
+- Review ulang seluruh fitur terhadap BRD.
+- Lakukan UAT internal.
+
+Output:
+- project siap masuk tahap implementasi nyata atau pilot
+ 
+==================================================
+URUTAN PRIORITAS PALING PENTING
+==================================================
+
+Jika ingin benar-benar efisien, fokus terbaik:
+
+1. Phase 1: auth + approval
+2. Phase 2: profile + QR
+3. Phase 3: class + membership
+4. Phase 5: absensi QR
+5. Phase 6: monitoring
+6. Phase 7-8: LMS lite
+7. Phase 9-12: hardening, report, finalisasi
+
+==================================================
+CATATAN PENGGUNAAN
+==================================================
+
+- Gunakan phase ini sebagai panduan implementasi bertahap.
+- Hindari membangun semua fitur sekaligus.
+- Selesaikan phase yang sedang aktif secara end-to-end sebelum masuk phase berikutnya.
+- Untuk langkah lebih operasional, phase-phase ini bisa diturunkan lagi menjadi checklist: database, backend, frontend, testing, dan done criteria.

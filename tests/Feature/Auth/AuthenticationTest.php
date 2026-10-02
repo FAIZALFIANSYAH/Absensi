@@ -30,6 +30,38 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
+    public function test_pending_users_can_not_authenticate_using_the_login_screen(): void
+    {
+        $user = User::factory()->create([
+            'approval_status' => 'pending',
+            'approved_at' => null,
+        ]);
+
+        $response = $this->from('/login')->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors('email');
+    }
+
+    public function test_inactive_users_can_not_authenticate_using_the_login_screen(): void
+    {
+        $user = User::factory()->create([
+            'is_active' => false,
+            'deactivated_at' => now(),
+        ]);
+
+        $response = $this->from('/login')->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors('email');
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();

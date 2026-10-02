@@ -1,0 +1,291 @@
+DATABASE BLUEPRINT
+Absensi QR & Smart Class
+
+Tujuan:
+- Menjadi pegangan desain tabel, relasi, dan enum.
+- Menjaga implementasi migration dan model tetap konsisten dengan BRD.
+
+==================================================
+MAIN TABLES
+==================================================
+
+1. users
+- id
+- name
+- email
+- password
+- role
+- approval_status
+- approved_at
+- approved_by
+- rejected_at
+- rejected_by
+- rejection_reason
+- email_verified_at
+- remember_token
+- created_at
+- updated_at
+
+2. student_profiles
+- id
+- user_id
+- nis
+- nik
+- phone
+- gender
+- birth_date
+- address
+- qr_token
+- qr_generated_at
+- created_at
+- updated_at
+
+3. teacher_profiles
+- id
+- user_id
+- nip
+- nik
+- phone
+- gender
+- birth_date
+- address
+- created_at
+- updated_at
+
+4. school_classes
+- id
+- name
+- slug
+- grade_level
+- major
+- academic_year
+- homeroom_teacher_id
+- created_by
+- created_at
+- updated_at
+
+5. class_members
+- id
+- school_class_id
+- user_id
+- member_role
+- joined_at
+- created_at
+- updated_at
+
+6. attendance_sessions
+- id
+- school_class_id
+- opened_by
+- session_date
+- start_time
+- end_time
+- status
+- notes
+- created_at
+- updated_at
+
+7. attendance_records
+- id
+- attendance_session_id
+- student_id
+- scanned_by
+- scanned_at
+- status
+- scan_payload
+- notes
+- created_at
+- updated_at
+
+8. materials
+- id
+- school_class_id
+- teacher_id
+- title
+- description
+- file_path
+- file_name
+- file_type
+- published_at
+- created_at
+- updated_at
+
+9. assignments
+- id
+- school_class_id
+- teacher_id
+- title
+- description
+- file_path
+- file_name
+- deadline_at
+- status
+- created_at
+- updated_at
+
+10. submissions
+- id
+- assignment_id
+- student_id
+- file_path
+- file_name
+- notes
+- submitted_at
+- status
+- score
+- feedback
+- graded_at
+- graded_by
+- created_at
+- updated_at
+
+11. approval_logs
+- id
+- user_id
+- action
+- acted_by
+- reason
+- created_at
+
+==================================================
+RELATIONSHIPS
+==================================================
+
+users
+- hasOne student_profile
+- hasOne teacher_profile
+- belongsTo approver via approved_by
+- belongsTo rejector via rejected_by
+- belongsToMany school_classes through class_members
+
+student_profiles
+- belongsTo user
+
+teacher_profiles
+- belongsTo user
+
+school_classes
+- belongsTo homeroom_teacher -> users
+- belongsTo creator -> users
+- hasMany class_members
+- belongsToMany users through class_members
+- hasMany attendance_sessions
+- hasMany materials
+- hasMany assignments
+
+class_members
+- belongsTo school_class
+- belongsTo user
+
+attendance_sessions
+- belongsTo school_class
+- belongsTo opener -> users
+- hasMany attendance_records
+
+attendance_records
+- belongsTo attendance_session
+- belongsTo student -> users
+- belongsTo scanner -> users
+
+materials
+- belongsTo school_class
+- belongsTo teacher -> users
+
+assignments
+- belongsTo school_class
+- belongsTo teacher -> users
+- hasMany submissions
+
+submissions
+- belongsTo assignment
+- belongsTo student -> users
+- belongsTo grader -> users
+
+approval_logs
+- belongsTo user
+- belongsTo actor -> users
+
+==================================================
+ENUM RECOMMENDATION
+==================================================
+
+users.role
+- superadmin
+- teacher
+- student
+
+users.approval_status
+- pending
+- approved
+- rejected
+
+class_members.member_role
+- teacher
+- student
+- homeroom_teacher
+
+attendance_sessions.status
+- open
+- closed
+
+attendance_records.status
+- present
+- late
+- excused
+- absent
+
+assignments.status
+- draft
+- published
+- closed
+
+submissions.status
+- submitted
+- late
+- graded
+
+approval_logs.action
+- approve
+- reject
+
+==================================================
+IMPORTANT CONSTRAINTS
+==================================================
+
+- users.email must be unique
+- student_profiles.user_id must be unique
+- student_profiles.nis must be unique
+- student_profiles.qr_token must be unique
+- teacher_profiles.user_id must be unique
+- school_classes.slug must be unique
+- class_members should be unique by school_class_id + user_id + member_role
+- attendance_records should be unique by attendance_session_id + student_id
+- submissions should be unique by assignment_id + student_id
+
+==================================================
+DESIGN NOTES
+==================================================
+
+- role and approval_status are stored directly in users for simplicity and speed.
+- QR identity is better stored as qr_token or encrypted payload, not only as an image file.
+- Attendance should be split into session and record:
+  attendance_sessions = attendance event per class/date
+  attendance_records = scan result per student
+- Class relationship should not be stored directly in users.
+- approval_logs is optional but recommended for audit trail.
+
+==================================================
+MIGRATION ORDER
+==================================================
+
+1. users
+2. student_profiles
+3. teacher_profiles
+4. school_classes
+5. class_members
+6. attendance_sessions
+7. attendance_records
+8. materials
+9. assignments
+10. submissions
+11. approval_logs

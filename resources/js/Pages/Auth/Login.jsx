@@ -23,13 +23,23 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title="Masuk" />
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                     {status}
                 </div>
             )}
+
+            <div className="mb-6 space-y-2">
+                <h1 className="text-2xl font-semibold text-slate-900">
+                    Masuk ke sistem
+                </h1>
+                <p className="text-sm leading-6 text-slate-600">
+                    Login hanya tersedia untuk akun yang sudah disetujui admin.
+                    Jika baru mendaftar, tunggu proses approval terlebih dahulu.
+                </p>
+            </div>
 
             <form onSubmit={submit}>
                 <div>
@@ -84,7 +94,7 @@ export default function Login({ status, canResetPassword }) {
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="rounded-md text-sm text-slate-600 underline hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
                         >
                             Forgot your password?
                         </Link>
@@ -93,6 +103,18 @@ export default function Login({ status, canResetPassword }) {
                     <PrimaryButton className="ms-4" disabled={processing}>
                         Log in
                     </PrimaryButton>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    <p className="font-medium text-slate-800">Belum punya akun?</p>
+                    <div className="mt-2 flex gap-4">
+                        <Link href={route('register.student')} className="underline">
+                            Daftar Siswa
+                        </Link>
+                        <Link href={route('register.teacher')} className="underline">
+                            Daftar Guru
+                        </Link>
+                    </div>
                 </div>
             </form>
         </GuestLayout>

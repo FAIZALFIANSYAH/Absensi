@@ -1,0 +1,309 @@
+MIGRATION ROADMAP
+Absensi QR & Smart Class
+
+Tujuan:
+- Menurunkan blueprint database menjadi urutan migration Laravel yang konkret.
+- Menjaga implementasi bertahap tetap aman terhadap dependency foreign key.
+- Menyesuaikan dengan kondisi project saat ini yang sudah memiliki migration default Laravel.
+
+==================================================
+KONDISI SAAT INI
+==================================================
+
+Migration bawaan yang sudah ada:
+- 0001_01_01_000000_create_users_table.php
+- 0001_01_01_000001_create_cache_table.php
+- 0001_01_01_000002_create_jobs_table.php
+
+Catatan penting:
+- Tabel users sudah dibuat oleh starter Laravel.
+- Jadi perubahan kebutuhan project tidak dilakukan dengan mengedit migration lama.
+- Perubahan users dilakukan lewat migration alter/add columns baru.
+
+==================================================
+URUTAN IMPLEMENTASI MIGRATION
+==================================================
+
+PHASE 1 - Fondasi user, role, approval
+
+1. add_role_and_approval_fields_to_users_table
+Tujuan:
+- Menambahkan role dan approval flow ke tabel users.
+
+Kolom yang ditambahkan:
+- role
+- approval_status
+- approved_at
+- approved_by
+- rejected_at
+- rejected_by
+- rejection_reason
+
+Foreign key:
+- approved_by -> users.id
+- rejected_by -> users.id
+
+Catatan:
+- Ini fondasi paling penting karena BRD mensyaratkan approval akun manual.
+
+2. create_student_profiles_table
+Tujuan:
+- Menyimpan data khusus siswa dan QR identity.
+
+Kolom inti:
+- user_id
+- nis
+- nik
+- phone
+- gender
+- birth_date
+- address
+- qr_token
+- qr_generated_at
+
+Foreign key:
+- user_id -> users.id
+
+3. create_teacher_profiles_table
+Tujuan:
+- Menyimpan data khusus guru.
+
+Kolom inti:
+- user_id
+- nip
+- nik
+- phone
+- gender
+- birth_date
+- address
+
+Foreign key:
+- user_id -> users.id
+
+4. create_approval_logs_table
+Tujuan:
+- Menyimpan histori approve/reject user.
+
+Kolom inti:
+- user_id
+- action
+- acted_by
+- reason
+- created_at
+
+Foreign key:
+- user_id -> users.id
+- acted_by -> users.id
+
+==================================================
+PHASE 2 - Fondasi kelas dan membership
+==================================================
+
+5. create_school_classes_table
+Tujuan:
+- Menyimpan master kelas.
+
+Kolom inti:
+- name
+- slug
+- grade_level
+- major
+- academic_year
+- homeroom_teacher_id
+- created_by
+
+Foreign key:
+- homeroom_teacher_id -> users.id
+- created_by -> users.id
+
+6. create_class_members_table
+Tujuan:
+- Menyimpan relasi user ke kelas.
+
+Kolom inti:
+- school_class_id
+- user_id
+- member_role
+- joined_at
+
+Foreign key:
+- school_class_id -> school_classes.id
+- user_id -> users.id
+
+Constraint:
+- unique(school_class_id, user_id, member_role)
+
+==================================================
+PHASE 3 - Domain absensi QR
+==================================================
+
+7. create_attendance_sessions_table
+Tujuan:
+- Menyimpan sesi absensi per kelas dan tanggal.
+
+Kolom inti:
+- school_class_id
+- opened_by
+- session_date
+- start_time
+- end_time
+- status
+- notes
+
+Foreign key:
+- school_class_id -> school_classes.id
+- opened_by -> users.id
+
+8. create_attendance_records_table
+Tujuan:
+- Menyimpan hasil scan per siswa.
+
+Kolom inti:
+- attendance_session_id
+- student_id
+- scanned_by
+- scanned_at
+- status
+- scan_payload
+- notes
+
+Foreign key:
+- attendance_session_id -> attendance_sessions.id
+- student_id -> users.id
+- scanned_by -> users.id
+
+Constraint:
+- unique(attendance_session_id, student_id)
+
+==================================================
+PHASE 4 - Domain materi dan tugas
+==================================================
+
+9. create_materials_table
+Tujuan:
+- Menyimpan materi yang diunggah guru untuk kelas tertentu.
+
+Kolom inti:
+- school_class_id
+- teacher_id
+- title
+- description
+- file_path
+- file_name
+- file_type
+- published_at
+
+Foreign key:
+- school_class_id -> school_classes.id
+- teacher_id -> users.id
+
+10. create_assignments_table
+Tujuan:
+- Menyimpan tugas per kelas.
+
+Kolom inti:
+- school_class_id
+- teacher_id
+- title
+- description
+- file_path
+- file_name
+- deadline_at
+- status
+
+Foreign key:
+- school_class_id -> school_classes.id
+- teacher_id -> users.id
+
+11. create_submissions_table
+Tujuan:
+- Menyimpan pengumpulan tugas siswa.
+
+Kolom inti:
+- assignment_id
+- student_id
+- file_path
+- file_name
+- notes
+- submitted_at
+- status
+- score
+- feedback
+- graded_at
+- graded_by
+
+Foreign key:
+- assignment_id -> assignments.id
+- student_id -> users.id
+- graded_by -> users.id
+
+Constraint:
+- unique(assignment_id, student_id)
+
+==================================================
+REKOMENDASI NAMA FILE MIGRATION
+==================================================
+
+1. xxxx_xx_xx_xxxxxx_add_role_and_approval_fields_to_users_table.php
+2. xxxx_xx_xx_xxxxxx_create_student_profiles_table.php
+3. xxxx_xx_xx_xxxxxx_create_teacher_profiles_table.php
+4. xxxx_xx_xx_xxxxxx_create_approval_logs_table.php
+5. xxxx_xx_xx_xxxxxx_create_school_classes_table.php
+6. xxxx_xx_xx_xxxxxx_create_class_members_table.php
+7. xxxx_xx_xx_xxxxxx_create_attendance_sessions_table.php
+8. xxxx_xx_xx_xxxxxx_create_attendance_records_table.php
+9. xxxx_xx_xx_xxxxxx_create_materials_table.php
+10. xxxx_xx_xx_xxxxxx_create_assignments_table.php
+11. xxxx_xx_xx_xxxxxx_create_submissions_table.php
+
+==================================================
+URUTAN KERJA YANG PALING AMAN
+==================================================
+
+1. Phase 1
+- role
+- approval
+- student profile
+- teacher profile
+- approval logs
+
+2. Phase 2
+- school classes
+- class members
+
+3. Phase 3
+- attendance sessions
+- attendance records
+
+4. Phase 4
+- materials
+- assignments
+- submissions
+
+==================================================
+REKOMENDASI SETELAH MIGRATION
+==================================================
+
+Setelah migration selesai:
+- buat Enums
+- update User model
+- buat StudentProfile dan TeacherProfile model
+- buat relasi model SchoolClass dan ClassMember
+- buat middleware approval
+- buat seeder superadmin
+
+==================================================
+PRIORITAS IMPLEMENTASI
+==================================================
+
+Jika ingin bergerak cepat sesuai BRD, prioritas coding awal:
+
+1. users alteration
+2. student_profiles
+3. teacher_profiles
+4. school_classes
+5. class_members
+6. attendance_sessions
+7. attendance_records
+
+Material, assignment, dan submission bisa menyusul setelah fondasi approval dan absensi stabil.

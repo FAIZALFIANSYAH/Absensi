@@ -1,0 +1,245 @@
+PROJECT ARCHITECTURE
+Absensi QR & Smart Class
+
+Tujuan:
+- Menjadi pegangan struktur backend dan frontend project.
+- Menjaga implementasi tetap sejalan dengan BRD.
+- Memisahkan area berdasarkan role dan domain bisnis.
+
+==================================================
+BACKEND LAYER
+==================================================
+
+app/
+|-- Actions/
+|   |-- Approval/
+|   |   |-- ApproveUser.php
+|   |   `-- RejectUser.php
+|   |-- Attendance/
+|   |   |-- GenerateStudentQrCode.php
+|   |   |-- OpenAttendanceSession.php
+|   |   `-- RecordAttendanceScan.php
+|   |-- Assignment/
+|   |   |-- PublishAssignment.php
+|   |   `-- SubmitAssignment.php
+|   `-- Class/
+|       |-- AssignTeacherToClass.php
+|       `-- EnrollStudentToClass.php
+|
+|-- Enums/
+|   |-- ApprovalStatus.php
+|   |-- AttendanceStatus.php
+|   |-- SessionStatus.php
+|   |-- SubmissionStatus.php
+|   `-- UserRole.php
+|
+|-- Http/
+|   |-- Controllers/
+|   |   |-- Admin/
+|   |   |   |-- DashboardController.php
+|   |   |   |-- ApprovalController.php
+|   |   |   |-- UserController.php
+|   |   |   |-- ClassController.php
+|   |   |   |-- AttendanceController.php
+|   |   |   |-- MaterialController.php
+|   |   |   |-- AssignmentController.php
+|   |   |   `-- ReportController.php
+|   |   |-- Teacher/
+|   |   |   |-- DashboardController.php
+|   |   |   |-- AttendanceController.php
+|   |   |   |-- AttendanceSessionController.php
+|   |   |   |-- MaterialController.php
+|   |   |   |-- AssignmentController.php
+|   |   |   `-- ClassController.php
+|   |   |-- Student/
+|   |   |   |-- DashboardController.php
+|   |   |   |-- QrCodeController.php
+|   |   |   |-- ClassController.php
+|   |   |   |-- MaterialController.php
+|   |   |   |-- AssignmentController.php
+|   |   |   `-- SubmissionController.php
+|   |   `-- Auth/
+|   |       |-- RegisteredStudentController.php
+|   |       |-- RegisteredTeacherController.php
+|   |       `-- AuthenticatedSessionController.php
+|   |
+|   |-- Middleware/
+|   |   |-- EnsureRole.php
+|   |   |-- EnsureUserIsApproved.php
+|   |   `-- ShareInertiaData.php
+|   |
+|   `-- Requests/
+|       |-- Approval/
+|       |   |-- ApproveUserRequest.php
+|       |   `-- RejectUserRequest.php
+|       |-- Attendance/
+|       |   |-- OpenAttendanceSessionRequest.php
+|       |   `-- ScanAttendanceRequest.php
+|       |-- Assignment/
+|       |   |-- StoreAssignmentRequest.php
+|       |   |-- UpdateAssignmentRequest.php
+|       |   `-- SubmitAssignmentRequest.php
+|       |-- Auth/
+|       |   |-- StudentRegisterRequest.php
+|       |   `-- TeacherRegisterRequest.php
+|       |-- Class/
+|       |   |-- StoreClassRequest.php
+|       |   |-- UpdateClassRequest.php
+|       |   |-- AssignTeacherRequest.php
+|       |   `-- EnrollStudentRequest.php
+|       |-- Material/
+|       |   |-- StoreMaterialRequest.php
+|       |   `-- UpdateMaterialRequest.php
+|       `-- User/
+|           |-- StoreUserRequest.php
+|           `-- UpdateUserRequest.php
+|
+|-- Models/
+|   |-- User.php
+|   |-- StudentProfile.php
+|   |-- TeacherProfile.php
+|   |-- SchoolClass.php
+|   |-- ClassMember.php
+|   |-- AttendanceSession.php
+|   |-- AttendanceRecord.php
+|   |-- Material.php
+|   |-- Assignment.php
+|   `-- Submission.php
+|
+|-- Notifications/
+|   |-- AccountApprovedNotification.php
+|   |-- AccountRejectedNotification.php
+|   |-- ResetPasswordNotification.php
+|   `-- AssignmentDeadlineReminderNotification.php
+|
+|-- Policies/
+|   |-- UserPolicy.php
+|   |-- SchoolClassPolicy.php
+|   |-- AttendanceSessionPolicy.php
+|   |-- AttendanceRecordPolicy.php
+|   |-- MaterialPolicy.php
+|   |-- AssignmentPolicy.php
+|   `-- SubmissionPolicy.php
+|
+|-- Repositories/
+|   |-- Attendance/
+|   |-- Assignment/
+|   |-- Class/
+|   |-- Material/
+|   |-- Submission/
+|   `-- User/
+|
+|-- Services/
+|   |-- QRCode/
+|   |   `-- QrCodeGenerator.php
+|   |-- Attendance/
+|   |   `-- AttendanceSummaryService.php
+|   `-- Reports/
+|       `-- AttendanceReportService.php
+|
+`-- Providers/
+    `-- AppServiceProvider.php
+
+==================================================
+FRONTEND LAYER
+==================================================
+
+resources/js/
+|-- Pages/
+|   |-- Admin/
+|   |   |-- Dashboard/
+|   |   |   `-- Index.jsx
+|   |   |-- Approval/
+|   |   |   |-- Index.jsx
+|   |   |   `-- Show.jsx
+|   |   |-- Users/
+|   |   |-- Classes/
+|   |   |-- Attendance/
+|   |   `-- Reports/
+|   |
+|   |-- Teacher/
+|   |   |-- Dashboard/
+|   |   |   `-- Index.jsx
+|   |   |-- Attendance/
+|   |   |-- ScanAttendance/
+|   |   |-- Materials/
+|   |   |-- Assignments/
+|   |   `-- Classes/
+|   |
+|   |-- Student/
+|   |   |-- Dashboard/
+|   |   |   `-- Index.jsx
+|   |   |-- QRCode/
+|   |   |   `-- Index.jsx
+|   |   |-- Classes/
+|   |   |-- Materials/
+|   |   |-- Assignments/
+|   |   `-- Submissions/
+|   |
+|   |-- Auth/
+|   |   |-- Login.jsx
+|   |   |-- RegisterStudent.jsx
+|   |   |-- RegisterTeacher.jsx
+|   |   |-- ForgotPassword.jsx
+|   |   `-- ResetPassword.jsx
+|   |
+|   `-- Profile/
+|
+|-- Components/
+|   |-- ui/
+|   |-- Forms/
+|   |-- Tables/
+|   |-- Shared/
+|   |-- Attendance/
+|   |-- QRCode/
+|   `-- Classroom/
+|
+|-- Layouts/
+|   |-- AppLayout.jsx
+|   |-- AdminLayout.jsx
+|   |-- TeacherLayout.jsx
+|   |-- StudentLayout.jsx
+|   `-- GuestLayout.jsx
+|
+|-- Hooks/
+|   |-- useRole.js
+|   |-- useApprovalStatus.js
+|   `-- useAttendanceFilters.js
+|
+|-- lib/
+|   |-- utils.ts
+|   |-- routes.ts
+|   |-- auth.ts
+|   `-- formatters.ts
+|
+|-- types/
+|   |-- auth.ts
+|   |-- attendance.ts
+|   |-- classroom.ts
+|   `-- user.ts
+|
+|-- app.jsx
+`-- bootstrap.js
+
+==================================================
+ROUTES
+==================================================
+
+routes/
+|-- web.php
+|-- auth.php
+|-- admin.php
+|-- teacher.php
+`-- student.php
+
+==================================================
+PRINSIP PENGGUNAAN
+==================================================
+
+- Pisahkan halaman dan controller berdasarkan role: admin, teacher, student.
+- Pisahkan logika bisnis inti ke Actions atau Services, jangan ditumpuk di controller.
+- Gunakan Enums untuk role, approval status, attendance status, dan submission status.
+- Gunakan Middleware + Policies untuk kontrol akses.
+- Pertahankan Components/ui untuk komponen dasar, lalu buat komponen domain terpisah.
+- Untuk fitur user management, pusatkan operasional admin di area Admin/Users lalu tetap delegasikan logic ke Action/Service.
+- Struktur ini dipilih agar selaras dengan BRD: approval akun, QR code siswa, scan absensi, kelas, materi, tugas, dan submission.

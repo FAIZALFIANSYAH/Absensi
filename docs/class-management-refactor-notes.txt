@@ -1,0 +1,208 @@
+CLASS MANAGEMENT REFACTOR NOTES
+Admin School Class Detail Split
+
+Tujuan:
+- Menjadi acuan refactor fitur class management di area superadmin.
+- Memisahkan halaman daftar kelas dari halaman detail kelas agar UI lebih rapi dan scalable.
+- Menambahkan domain baru untuk guru mata pelajaran per kelas tanpa merusak fondasi class membership yang sudah ada.
+
+==================================================
+LATAR BELAKANG
+==================================================
+
+Kondisi saat ini:
+- Halaman /admin/classes memuat form create class.
+- Halaman yang sama juga langsung memuat assign guru umum ke kelas.
+- Halaman yang sama juga langsung memuat enroll siswa ke kelas.
+
+Dampak:
+- Halaman menjadi terlalu padat.
+- Sulit berkembang saat kebutuhan domain kelas bertambah.
+- Sulit memisahkan konteks antara master class list dan operasional satu kelas tertentu.
+
+==================================================
+TUJUAN REFACTOR
+==================================================
+
+1. Pisahkan halaman daftar kelas dan halaman detail kelas.
+
+2. Pertahankan fitur lama:
+- create class
+- assign guru umum ke kelas
+- enroll siswa ke kelas
+
+3. Tambahkan fitur baru:
+- guru untuk mata pelajaran tertentu dalam suatu kelas
+
+==================================================
+STRUKTUR HALAMAN YANG DIINGINKAN
+==================================================
+
+Halaman 1:
+- GET /admin/classes
+- Menampilkan:
+  - form buat kelas baru
+  - list semua kelas
+  - tombol Masuk pada tiap kelas
+
+Halaman 2:
+- GET /admin/classes/{schoolClass}
+- Menampilkan:
+  - informasi kelas
+  - wali kelas
+  - guru mata pelajaran
+  - daftar siswa
+  - form assign guru mapel
+  - form tambah siswa
+
+==================================================
+DOMAIN DATA YANG DIREKOMENDASIKAN
+==================================================
+
+Tetap gunakan domain lama:
+- school_classes
+- class_members
+
+Tambahkan domain baru:
+- class_subject_teachers
+
+Tujuan pemisahan:
+- class_members tetap menjadi membership umum user ke kelas
+- school_classes.homeroom_teacher_id tetap menjadi wali kelas
+- class_subject_teachers menjadi penugasan guru untuk mapel tertentu di kelas
+
+==================================================
+REKOMENDASI DATABASE
+==================================================
+
+Tabel baru:
+- class_subject_teachers
+
+Kolom minimal:
+- id
+- school_class_id
+- teacher_id
+- subject_name
+- created_at
+- updated_at
+
+Foreign key:
+- school_class_id -> school_classes.id
+- teacher_id -> users.id
+
+Constraint yang disarankan:
+- unique(school_class_id, subject_name)
+
+Catatan:
+- Untuk tahap awal, subject_name cukup berupa string.
+- Belum perlu membuat master subjects jika kebutuhan mapel belum kompleks.
+- Jika nanti domain mapel berkembang, subject_name dapat dimigrasikan ke tabel subjects terpisah.
+
+==================================================
+RELASI MODEL YANG DIPERLUKAN
+==================================================
+
+Model baru:
+- app/Models/ClassSubjectTeacher.php
+
+Relasi utama:
+- SchoolClass hasMany ClassSubjectTeacher
+- User hasMany ClassSubjectTeacher sebagai teacher
+- ClassSubjectTeacher belongsTo SchoolClass
+- ClassSubjectTeacher belongsTo User sebagai teacher
+
+==================================================
+ROUTE YANG DIPERLUKAN
+==================================================
+
+Tetap dipakai:
+- GET /admin/classes
+- POST /admin/classes
+- POST /admin/classes/{schoolClass}/teachers
+- POST /admin/classes/{schoolClass}/students
+
+Tambahan:
+- GET /admin/classes/{schoolClass}
+- POST /admin/classes/{schoolClass}/subject-teachers
+- PATCH /admin/classes/{schoolClass}/subject-teachers/{assignment}
+- DELETE /admin/classes/{schoolClass}/subject-teachers/{assignment}
+
+==================================================
+CONTROLLER DAN ACTION
+==================================================
+
+Controller utama tetap:
+- app/Http/Controllers/Admin/ClassController.php
+
+Method minimum yang dibutuhkan:
+- index
+- store
+- show
+- assignTeacher
+- enrollStudent
+- assignSubjectTeacher
+- updateSubjectTeacher
+- removeSubjectTeacher
+
+Action yang disarankan:
+- app/Actions/Class/CreateSchoolClass.php
+- app/Actions/Class/AssignTeacherToClass.php
+- app/Actions/Class/EnrollStudentToClass.php
+- app/Actions/Class/AssignSubjectTeacher.php
+- app/Actions/Class/UpdateSubjectTeacher.php
+- app/Actions/Class/RemoveSubjectTeacher.php
+
+==================================================
+FRONTEND YANG DIPERLUKAN
+==================================================
+
+Pages:
+- resources/js/Pages/Admin/Classes/Index.jsx
+- resources/js/Pages/Admin/Classes/Show.jsx
+
+Komponen sederhana yang bisa dipisah bila perlu:
+- resources/js/Components/Classroom/ClassListCard.jsx
+- resources/js/Components/Classroom/ClassInfoPanel.jsx
+- resources/js/Components/Classroom/SubjectTeacherForm.jsx
+- resources/js/Components/Classroom/StudentEnrollmentPanel.jsx
+
+Catatan UI:
+- gunakan pola sederhana dan konsisten dengan komponen yang sudah ada
+- tidak perlu redesign besar
+- fokus pada struktur, keterbacaan, dan scalability
+
+==================================================
+ATURAN BISNIS YANG PERLU DIJAGA
+==================================================
+
+- Wali kelas tetap berbeda dari guru mata pelajaran.
+- Guru mapel harus merupakan user dengan role teacher.
+- Subject assignment tidak boleh bentrok untuk mapel yang sama dalam satu kelas.
+- Fitur membership umum guru dan siswa tetap dipertahankan.
+- Enroll siswa tetap dilakukan per kelas.
+- Assign guru umum tetap dipertahankan jika masih dibutuhkan untuk membership dasar.
+
+==================================================
+URUTAN IMPLEMENTASI AMAN
+==================================================
+
+1. Tambahkan migration class_subject_teachers
+2. Tambahkan model dan relasi
+3. Tambahkan action untuk subject teacher assignment
+4. Tambahkan route show class
+5. Refactor halaman /admin/classes agar hanya menampilkan create form + list class
+6. Tambahkan halaman /admin/classes/{schoolClass}
+7. Pindahkan assign guru umum dan enroll siswa ke halaman detail
+8. Tambahkan form assign guru mapel
+9. Tambahkan test untuk class detail dan subject teacher assignment
+
+==================================================
+DONE CRITERIA MINIMAL
+==================================================
+
+- /admin/classes hanya menjadi halaman daftar kelas
+- setiap kelas dapat dibuka ke halaman detail
+- detail kelas menampilkan informasi kelas, guru mapel, dan siswa
+- admin bisa assign siswa ke kelas dari halaman detail
+- admin bisa assign guru mapel ke kelas dari halaman detail
+- struktur data siap berkembang tanpa membuat halaman daftar kelas kembali padat
